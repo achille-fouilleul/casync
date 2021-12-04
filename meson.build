@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: LGPL-2.1+
 
-project('casync', 'c',
+project('casync', ['c', 'cpp'],
         version : '2',
         license : 'LGPLv2+',
         default_options: [
@@ -9,12 +9,14 @@ project('casync', 'c',
                 'sysconfdir=/etc',
                 'localstatedir=/var',
                 'auto_features=enabled',
+                'cpp_std=gnu++2a',
         ],
         meson_version : '>= 0.47')
 
 cc = meson.get_compiler('c')
+cpp = meson.get_compiler('cpp')
 
-c_args = '''
+c_cpp_args = '''
         -Wextra
         -Werror=undef
         -Werror=format=2
@@ -22,18 +24,13 @@ c_args = '''
         -Wformat-nonliteral
         -Wlogical-op
         -Wmissing-include-dirs
-        -Werror=old-style-definition
         -Werror=pointer-arith
         -Winit-self
         -Wfloat-equal
         -Wsuggest-attribute=noreturn
-        -Werror=missing-prototypes
-        -Werror=implicit-function-declaration
         -Werror=missing-declarations
         -Werror=return-type
-        -Werror=incompatible-pointer-types
         -Werror=shadow
-        -Werror=int-conversion
         -Wstrict-prototypes
         -Wredundant-decls
         -Wmissing-noreturn
@@ -57,9 +54,23 @@ c_args = '''
         --param=ssp-buffer-size=4
 '''.split()
 
-foreach arg : c_args
+c_args = '''
+        -Werror=implicit-function-declaration
+        -Werror=incompatible-pointer-types
+        -Werror=int-conversion
+        -Werror=missing-prototypes
+        -Werror=old-style-definition
+'''.split()
+
+foreach arg : c_cpp_args + c_args
         if cc.has_argument(arg)
                 add_project_arguments(arg, language : 'c')
+        endif
+endforeach
+
+foreach arg : c_cpp_args
+        if cpp.has_argument(arg)
+                add_project_arguments(arg, language : 'cpp')
         endif
 endforeach
 
@@ -69,8 +80,6 @@ if want_ossfuzz and want_libfuzzer
         error('only one of oss-fuzz and llvm-fuzz can be specified')
 endif
 fuzzer_build = want_ossfuzz or want_libfuzzer
-
-add_languages('cpp', required : fuzzer_build)
 
 conf = configuration_data()
 conf.set_quoted('PACKAGE_VERSION', meson.project_version())
@@ -168,7 +177,7 @@ endif
 config_h = configure_file(
         output : 'config.h',
         configuration : conf)
-add_project_arguments('-include', 'config.h', language : 'c')
+add_project_arguments('-include', 'config.h', language : ['c', 'cpp'])
 
 subdir('src')
 subdir('test')
@@ -215,6 +224,24 @@ casync_http = executable(
                 openssl],
         install : true,
         install_dir : protocoldir)
+
+if get_option('fuse')
+        mount_caidx = executable(
+                'mount.caidx',
+                mount_caidx_sources,
+                cpp_args : ['-std=gnu++20'],
+                link_with: libshared,
+                dependencies : [
+                        libacl,
+                        libfuse,
+                        liblzma,
+                        libselinux,
+                        libz,
+                        libzstd,
+                        openssl
+                ],
+                install : true)
+endif
 
 meson.add_install_script('sh', '-c',
                          'ln -svf casync-http $DESTDIR@0@'.format(

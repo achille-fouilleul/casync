@@ -113,3 +113,7 @@ if conf.get('HAVE_FUSE') == 1
 endif
 
 casync_http_sources = files('casync-http.c')
+
+mount_caidx_sources = files('''
+        mount-caidx.cpp
+'''.split())
