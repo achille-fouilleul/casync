@@ -243,6 +243,24 @@ if get_option('fuse')
                 install : true)
 endif
 
+libcasync = shared_library(
+        'casync',
+        [
+                libshared_sources,
+                util_sources
+        ],
+        dependencies : [
+                libacl,
+                libselinux,
+                libz,
+                libzstd,
+                liblzma,
+                math,
+                openssl
+        ],
+        soversion : '0.0',
+        install: true)
+
 meson.add_install_script('sh', '-c',
                          'ln -svf casync-http $DESTDIR@0@'.format(
                                  join_paths(protocoldir, 'casync-https')))

@@ -3,6 +3,7 @@
 #ifndef foocastorehfoo
 #define foocastorehfoo
 
+#include "caapi.h"
 #include "cachunk.h"
 #include "cachunkid.h"
 #include "cautil.h"
@@ -10,19 +11,19 @@
 typedef struct CaStore CaStore;
 typedef struct CaStoreIterator CaStoreIterator;
 
-CaStore* ca_store_new(void);
+CASYNC_PUBLIC CaStore* ca_store_new(void);
 CaStore *ca_store_new_cache(void);
-CaStore* ca_store_unref(CaStore *store);
+CASYNC_PUBLIC CaStore* ca_store_unref(CaStore *store);
 static inline void ca_store_unrefp(CaStore **store) {
         ca_store_unref(*store);
 }
 
-int ca_store_set_path(CaStore *store, const char *path);
+CASYNC_PUBLIC int ca_store_set_path(CaStore *store, const char *path);
 int ca_store_set_compression(CaStore *store, CaChunkCompression c);
 int ca_store_set_compression_type(CaStore *store, CaCompressionType compression);
 
-int ca_store_get(CaStore *store, const CaChunkID *chunk_id, CaChunkCompression desired_compression, const void **ret, uint64_t *ret_size, CaChunkCompression *ret_effective_compression);
-int ca_store_has(CaStore *store, const CaChunkID *chunk_id);
+CASYNC_PUBLIC int ca_store_get(CaStore *store, const CaChunkID *chunk_id, CaChunkCompression desired_compression, const void **ret, uint64_t *ret_size, CaChunkCompression *ret_effective_compression);
+CASYNC_PUBLIC int ca_store_has(CaStore *store, const CaChunkID *chunk_id);
 int ca_store_put(CaStore *store, const CaChunkID *chunk_id, CaChunkCompression effective_compression, const void *data, uint64_t size);
 
 int ca_store_get_requests(CaStore *s, uint64_t *ret);
